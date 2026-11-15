@@ -20,6 +20,7 @@ Sistem memiliki dua resource utama, yaitu Anggota dan Absensi. Data absensi terh
 - **Prisma ORM 7** – Mengelola operasi database.
 - **SQLite** – Menyimpan data anggota dan absensi.
 - **Postman** – Menguji endpoint REST API.
+- **cURL** – Mengirim request HTTP melalui terminal.
 
 ## 3. Struktur Folder
 
@@ -40,14 +41,17 @@ Sistem memiliki dua resource utama, yaitu Anggota dan Absensi. Data absensi terh
 │   └── service/
 │       ├── anggota.service.ts
 │       └── absensi.service.ts
+├── ss
 ├── .env
 ├── .env.example
 ├── app.ts
 ├── client.ts
+├── package-lock.json
 ├── package.json
 ├── prisma.config.ts
-├── server.ts
 └── README.md
+├── server.ts
+└── tsconfig.json
 ```
 
 ## 4. Cara Menjalankan Proyek
@@ -59,7 +63,7 @@ Pastikan Node.js dan npm sudah terpasang pada komputer.
 Buka terminal pada folder proyek, kemudian jalankan:
 
 ```bash
-npm install
+npm.cmd install
 ```
 
 ### B. Konfigurasi Environment
@@ -68,7 +72,7 @@ Buat file `.env` pada direktori utama proyek:
 
 ```env
 DATABASE_URL="file:./prisma/dev.db"
-PORT=3009
+PORT=3008
 ```
 
 ### C. Generate Prisma Client
@@ -88,7 +92,13 @@ Migrasi digunakan untuk membuat tabel database berdasarkan struktur model pada `
 ### E. Menjalankan Server
 
 ```bash
-npm run dev
+npm.cmd run dev
+```
+
+Server berjalan pada alamat:
+
+```text
+http://localhost:3008
 ```
 
 ### F. Mengakses API
@@ -96,13 +106,13 @@ npm run dev
 Alamat utama API:
 
 ```text
-http://localhost:3009/
+http://localhost:3008/
 ```
 
 Pemeriksaan koneksi API dan database:
 
 ```text
-http://localhost:3009/api/health
+http://localhost:3008/api/health
 ```
 
 ## 5. Struktur dan Alur Kerja Sistem
@@ -118,22 +128,22 @@ Sistem menggunakan pola pemisahan Route, Controller, dan Service agar setiap bag
 Alur kerja sistem:
 
 ```text
-Pengguna / Postman
-        |
-        v
-      Routes
-        |
-        v
-    Controller
-        |
-        v
-      Service
-        |
-        v
-    Prisma ORM
-        |
-        v
-   Database SQLite
+Pengguna / Postman / cURL
+          |
+          v
+        Routes
+          |
+          v
+      Controller
+          |
+          v
+        Service
+          |
+          v
+      Prisma ORM
+          |
+          v
+     Database SQLite
 ```
 
 ## 6. Struktur Data dan Relasi
@@ -173,6 +183,8 @@ Status kehadiran yang digunakan meliputi:
 
 Model Anggota dan Absensi memiliki relasi one-to-many. Artinya, satu anggota dapat memiliki lebih dari satu data absensi, sedangkan setiap data absensi terhubung dengan satu anggota.
 
+Pada respons API Absensi, informasi anggota juga ditampilkan melalui relasi, meliputi ID anggota, NIM, nama, dan jabatan.
+
 ## 7. Daftar Endpoint API
 
 ### A. Endpoint Anggota
@@ -202,130 +214,262 @@ Model Anggota dan Absensi memiliki relasi one-to-many. Artinya, satu anggota dap
 | GET | `/` | Menampilkan informasi API |
 | GET | `/api/health` | Memeriksa koneksi API dan database |
 
-## 8. Contoh Pengujian API
+## 8. Contoh Pengujian API Menggunakan cURL
 
-Pengujian API dilakukan menggunakan Postman dengan format request body JSON.
+Pengujian API dilakukan menggunakan cURL melalui terminal PowerShell. Seluruh request menggunakan alamat dasar `http://localhost:3008`.
 
-### A. POST – Menambahkan Anggota
+### A. Pengujian Endpoint Anggota
 
-**Endpoint:**
+**1. GET – Menampilkan Semua Anggota**
 
-```text
-POST http://localhost:3009/anggota
+```powershell
+curl.exe -i http://localhost:3008/anggota
 ```
 
-**Body (JSON):**
+Respons yang diharapkan: `200 OK`.
 
-```json
-{
-  "id_anggota": "AGT001",
-  "nama": "Kim Taehyung",
-  "nim": "260160221012",
-  "jabatan": "Ketua"
-}
+**2. POST – Menambahkan Anggota**
+
+```powershell
+curl.exe -i -X POST http://localhost:3008/anggota `
+-H "Content-Type: application/json" `
+-d '{"id_anggota":"AGT004","nama":"Contoh Anggota","nim":"240160221015","jabatan":"Anggota"}'
 ```
 
 Respons yang diharapkan: `201 Created`.
 
-### B. GET – Menampilkan Semua Anggota
+**3. GET – Detail Anggota**
 
-```text
-GET http://localhost:3009/anggota
+```powershell
+curl.exe -i http://localhost:3008/anggota/AGT001
 ```
 
 Respons yang diharapkan: `200 OK`.
 
-### C. GET – Detail Anggota
+**4. PATCH – Memperbarui Anggota**
 
-```text
-GET http://localhost:3009/anggota/AGT001
+```powershell
+curl.exe -i -X PATCH http://localhost:3008/anggota/AGT001 `
+-H "Content-Type: application/json" `
+-d '{"jabatan":"Wakil Ketua"}'
 ```
 
 Respons yang diharapkan: `200 OK`.
 
-### D. PATCH – Memperbarui Anggota
+**5. DELETE – Menghapus Anggota**
 
-```text
-PATCH http://localhost:3008/anggota/AGT001
+```powershell
+curl.exe -i -X DELETE http://localhost:3008/anggota/AGT004
 ```
 
-Body:
+Respons yang diharapkan: `204 No Content`, apabila anggota tidak memiliki data absensi yang masih terhubung.
+
+### B. Pengujian Endpoint Absensi
+
+**1. GET – Menampilkan Semua Data Absensi**
+
+```powershell
+curl.exe -i http://localhost:3008/absensi
+```
+
+Respons yang diharapkan: `200 OK`.
+
+**2. POST – Menambahkan Data Absensi**
+
+```powershell
+curl.exe -i -X POST http://localhost:3008/absensi `
+-H "Content-Type: application/json" `
+-d '{"id_absensi":"ABS002","id_anggota":"AGT002","kegiatan":"Rapat Pembahasan LDKM","tanggal":"2026-09-27","status":"Hadir"}'
+```
+
+Respons yang diharapkan: `201 Created`.
+
+Contoh response berdasarkan hasil pengujian Postman:
 
 ```json
 {
-  "jabatan": "Wakil Ketua"
+  "success": true,
+  "message": "Data absensi berhasil ditambahkan",
+  "data": {
+    "id_absensi": "ABS002",
+    "id_anggota": "AGT002",
+    "kegiatan": "Rapat Pembahasan LDKM",
+    "tanggal": "2026-09-27",
+    "status": "Hadir",
+    "anggota": {
+      "id_anggota": "AGT002",
+      "nim": "260160221013",
+      "nama": "Kim Jennie",
+      "jabatan": "Wakil Ketua"
+    }
+  }
 }
+```
+
+**3. GET – Detail Absensi**
+
+```powershell
+curl.exe -i http://localhost:3008/absensi/ABS003
 ```
 
 Respons yang diharapkan: `200 OK`.
 
-### E. POST – Menambahkan Absensi
+Contoh response berdasarkan hasil pengujian Postman:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id_absensi": "ABS003",
+    "id_anggota": "AGT003",
+    "kegiatan": "Rapat Program Kerja",
+    "tanggal": "2026-09-28",
+    "status": "Izin",
+    "anggota": {
+      "id_anggota": "AGT003",
+      "nim": "260160221014",
+      "nama": "Park Jimin",
+      "jabatan": "Sekretaris"
+    }
+  }
+}
+```
+
+**4. PATCH – Memperbarui Data Absensi**
+
+```powershell
+curl.exe -i -X PATCH http://localhost:3008/absensi/ABS003 `
+-H "Content-Type: application/json" `
+-d '{"status":"Hadir"}'
+```
+
+Respons yang diharapkan: `200 OK`.
+
+Contoh response berdasarkan hasil pengujian Postman:
+
+```json
+{
+  "success": true,
+  "message": "Data absensi berhasil diperbarui",
+  "data": {
+    "id_absensi": "ABS003",
+    "id_anggota": "AGT003",
+    "kegiatan": "Rapat Program Kerja",
+    "tanggal": "2026-09-28",
+    "status": "Hadir",
+    "anggota": {
+      "id_anggota": "AGT003",
+      "nim": "260160221014",
+      "nama": "Park Jimin",
+      "jabatan": "Sekretaris"
+    }
+  }
+}
+```
+
+**5. DELETE – Menghapus Data Absensi**
+
+```powershell
+curl.exe -i -X DELETE http://localhost:3008/absensi/ABS003
+```
+
+Respons yang diharapkan: `204 No Content`.
+
+Sesuai hasil pengujian Postman, penghapusan berhasil dilakukan tanpa mengembalikan response body.
+
+### C. Pengujian Endpoint Umum
+
+**1. GET – Informasi API**
+
+```powershell
+curl.exe -i http://localhost:3008/
+```
+
+Respons yang diharapkan: `200 OK`.
+
+**2. GET – Pemeriksaan Kesehatan API**
+
+```powershell
+curl.exe -i http://localhost:3008/api/health
+```
+
+Respons yang diharapkan: `200 OK`.
+
+### D. Pengujian Error Handling
+
+Pengujian error handling dilakukan untuk memastikan API dapat mendeteksi kesalahan input dan memberikan status HTTP yang sesuai.
+
+**1. Pengujian 400 Bad Request**
+
+Pengujian dilakukan dengan mengirimkan request POST ke endpoint `/absensi` tanpa menyertakan field `id_absensi` yang merupakan field wajib.
+
+Endpoint:
 
 ```text
 POST http://localhost:3008/absensi
 ```
 
-Body:
+Request Body:
 
 ```json
 {
-  "id_absensi": "ABS001",
-  "id_anggota": "AGT001",
-  "kegiatan": "Rapat Pembahasan LDKM",
-  "tanggal": "2026-11-04",
-  "status": "Hadir"
+  "id_anggota": "AGT004",
+  "nama": "Park Chae-young",
+  "nim": "260160221014",
+  "jabatan": ""
 }
 ```
 
-Respons yang diharapkan: `201 Created`.
+Perintah cURL:
 
-### F. GET – Menampilkan Semua Absensi
-
-```text
-GET http://localhost:3003/absensi
+```powershell
+curl.exe -i -X POST http://localhost:3008/absensi `
+-H "Content-Type: application/json" `
+-d '{"id_anggota":"AGT004","nama":"Park Chae-young","nim":"260160221014","jabatan":""}'
 ```
 
-Respons yang diharapkan: `200 OK`.
-
-### G. GET – Detail Absensi
-
-```text
-GET http://localhost:3009/absensi/ABS003
-```
-
-Respons yang diharapkan: `200 OK`.
-
-### H. PATCH – Memperbarui Absensi
-
-```text
-PATCH http://localhost:3008/absensi/ABS003
-```
-
-Body:
+Response berdasarkan hasil pengujian Postman:
 
 ```json
 {
-  "status": "Hadir"
+  "success": false,
+  "message": "Field 'id_absensi' wajib diisi dan tidak boleh kosong"
 }
 ```
 
-Respons yang diharapkan: `200 OK`.
+Hasil pengujian: `400 Bad Request`.
 
-### I. DELETE – Menghapus Absensi
+Pengujian menunjukkan bahwa API berhasil mendeteksi field `id_absensi` yang tidak disertakan dalam request body dan mengembalikan pesan kesalahan yang sesuai.
 
-```text
-DELETE http://localhost:3008/absensi/ABS001
+**2. Pengujian 404 Not Found**
+
+Pengujian dilakukan dengan mencari data anggota menggunakan ID yang tidak terdaftar.
+
+Endpoint:
+
+PATCH http://localhost:3008/ABS005
+
+Request Body :
+
+```json
+{"status": "Hadir"}
 ```
 
-Respons yang diharapkan: `204 No Content`.
+Perintah cURL:
 
-### J. DELETE – Menghapus Anggota
+curl.exe -i -X PATCH http://localhost:3008/ABS005 -H "Content-Type: application/json" -d "{\"status\":\"Hadir\"}"
 
-```text
-DELETE http://localhost:3008/anggota/AGT001
+Response berdasarkan hasil pengujian Postman:
+
+```json
+{
+    "success": false,
+    "message": "Data absensi dengan ID 'ABS005' tidak ditemukan"
+}
 ```
+Hasil pengujian: `404 Bad Request`.
 
-Respons yang diharapkan: `204 No Content` jika anggota tidak memiliki data absensi yang masih terhubung.
+Respons yang diharapkan: Pengujian menghasilkan respons 404 Not Found karena data absensi dengan ID ABS005 tidak ditemukan di dalam database.
 
 ## 9. Penanganan Kesalahan
 
@@ -336,15 +480,65 @@ API memiliki mekanisme penanganan kesalahan untuk memberikan respons yang sesuai
 | 200 OK | Request berhasil |
 | 201 Created | Data berhasil ditambahkan |
 | 204 No Content | Data berhasil dihapus |
-| 400 Bad Request | Input atau format JSON tidak valid |
+| 400 Bad Request | Input atau field wajib tidak valid |
 | 404 Not Found | Data atau endpoint tidak ditemukan |
 | 409 Conflict | Terjadi konflik data |
 | 500 Internal Server Error | Terjadi kesalahan pada server |
 
-## 10. Kesimpulan
+Penanganan kesalahan diterapkan agar API dapat memberikan informasi yang sesuai ketika terjadi kesalahan pada request, seperti input yang tidak valid, data yang tidak ditemukan, atau konflik data.
+
+## 10. Bukti Pengujian API
+
+Pengujian API dilakukan menggunakan Postman untuk memastikan setiap endpoint dapat menjalankan fungsinya sesuai dengan kebutuhan sistem.
+
+Bukti pengujian pada resource Absensi:
+
+### A. POST – Menambahkan Data Absensi
+
+![POST Absensi](ss/02-Post-Absensi.PNG)
+
+Hasil pengujian menunjukkan bahwa data absensi berhasil ditambahkan dengan status `201 Created`. Respons juga menampilkan informasi anggota yang terhubung dengan data absensi.
+
+### B. GET – Menampilkan Seluruh Data Absensi
+
+![GET Semua Absensi](ss/03-Get-absensi.PNG)
+
+Hasil pengujian menunjukkan bahwa seluruh data absensi berhasil ditampilkan dengan status `200 OK`.
+
+### C. GET – Menampilkan Detail Absensi
+
+![GET Detail Absensi](ss/04-Get-ABS.PNG)
+
+Hasil pengujian menunjukkan bahwa detail absensi berdasarkan ID berhasil ditampilkan dengan status `200 OK`.
+
+### D. PATCH – Memperbarui Data Absensi
+
+![PATCH Absensi](ss/05-Patch.PNG)
+
+Hasil pengujian menunjukkan bahwa data absensi berhasil diperbarui dengan status `200 OK`.
+
+### E. DELETE – Menghapus Data Absensi
+
+![DELETE Absensi](ss/06-Del-AbS.PNG)
+
+Hasil pengujian menunjukkan bahwa data absensi berhasil dihapus dengan status `204 No Content`.
+
+### F. Pengujian 400 Bad Request
+
+![400 Bad Request](ss/07-Post%20400.PNG)
+
+Hasil pengujian menunjukkan bahwa API berhasil mendeteksi field `id_absensi` yang tidak disertakan pada request body dan memberikan respons `400 Bad Request`.
+
+### G. Bukti Pengujian Lainnya
+
+Screenshot pengujian endpoint Anggota, endpoint umum, dan pengujian 404 Not Found dilampirkan setelah proses pengujian selesai dilakukan.
+
+## 11. Kesimpulan
 
 REST API Sistem Informasi Absensi Organisasi dikembangkan untuk membantu pengelolaan data anggota dan pencatatan kehadiran dalam kegiatan organisasi.
 
 Dengan menggunakan Node.js, Express.js, TypeScript, Prisma ORM, dan SQLite, sistem dapat menjalankan operasi CRUD pada resource Anggota dan Absensi.
 
 Penerapan pola Route, Controller, dan Service membuat struktur aplikasi lebih terorganisasi dan memudahkan pengembangan serta pemeliharaan sistem. Relasi antara Anggota dan Absensi juga memungkinkan pencatatan kehadiran setiap anggota secara terstruktur.
+
+Pengujian menggunakan Postman dan cURL dilakukan untuk memastikan setiap endpoint dapat menjalankan fungsinya serta memberikan status HTTP sesuai dengan hasil request.
