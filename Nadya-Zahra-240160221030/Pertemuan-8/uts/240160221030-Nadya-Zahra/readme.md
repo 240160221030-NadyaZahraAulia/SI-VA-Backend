@@ -41,7 +41,7 @@ Sistem memiliki dua resource utama, yaitu Anggota dan Absensi. Data absensi terh
 │   └── service/
 │       ├── anggota.service.ts
 │       └── absensi.service.ts
-├── ss
+├── ss/
 ├── .env
 ├── .env.example
 ├── app.ts
@@ -49,7 +49,7 @@ Sistem memiliki dua resource utama, yaitu Anggota dan Absensi. Data absensi terh
 ├── package-lock.json
 ├── package.json
 ├── prisma.config.ts
-└── README.md
+├── README.md
 ├── server.ts
 └── tsconfig.json
 ```
@@ -443,33 +443,42 @@ Pengujian menunjukkan bahwa API berhasil mendeteksi field `id_absensi` yang tida
 
 **2. Pengujian 404 Not Found**
 
-Pengujian dilakukan dengan mencari data anggota menggunakan ID yang tidak terdaftar.
+Pengujian dilakukan dengan mencari data absensi menggunakan ID yang tidak terdaftar.
 
 Endpoint:
 
-PATCH http://localhost:3008/ABS005
+```text
+PATCH http://localhost:3008/absensi/ABS005
+```
 
-Request Body :
+Request Body:
 
 ```json
-{"status": "Hadir"}
+{
+  "status": "Hadir"
+}
 ```
 
 Perintah cURL:
 
-curl.exe -i -X PATCH http://localhost:3008/ABS005 -H "Content-Type: application/json" -d "{\"status\":\"Hadir\"}"
+```powershell
+curl.exe -i -X PATCH http://localhost:3008/absensi/ABS005 `
+-H "Content-Type: application/json" `
+-d '{"status":"Hadir"}'
+```
 
 Response berdasarkan hasil pengujian Postman:
 
 ```json
 {
-    "success": false,
-    "message": "Data absensi dengan ID 'ABS005' tidak ditemukan"
+  "success": false,
+  "message": "Data absensi dengan ID 'ABS005' tidak ditemukan"
 }
 ```
-Hasil pengujian: `404 Bad Request`.
 
-Respons yang diharapkan: Pengujian menghasilkan respons 404 Not Found karena data absensi dengan ID ABS005 tidak ditemukan di dalam database.
+Hasil pengujian: `404 Not Found`.
+
+Respons tersebut menunjukkan bahwa API berhasil mendeteksi data absensi dengan ID `ABS005` tidak ditemukan di dalam database.
 
 ## 9. Penanganan Kesalahan
 
@@ -529,9 +538,12 @@ Hasil pengujian menunjukkan bahwa data absensi berhasil dihapus dengan status `2
 
 Hasil pengujian menunjukkan bahwa API berhasil mendeteksi field `id_absensi` yang tidak disertakan pada request body dan memberikan respons `400 Bad Request`.
 
-### G. Bukti Pengujian Lainnya
+### G. Pengujian 404 Not Found
 
-Screenshot pengujian endpoint Anggota, endpoint umum, dan pengujian 404 Not Found dilampirkan setelah proses pengujian selesai dilakukan.
+![404 Not Found](ss/08-404.PNG)
+
+Hasil pengujian menunjukkan bahwa API berhasil mendeteksi data absensi dengan ID `ABS005` yang tidak ditemukan dan memberikan respons `404 Not Found`.
+
 
 ## 11. Kesimpulan
 
